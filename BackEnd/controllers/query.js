@@ -1,18 +1,12 @@
-
-// import { MongoClient } from "mongodb";
-
-// const dbURI = 'mongodb+srv://test:1234@cluster0.xqjdndp.mongodb.net/?retryWrites=true&w=majority';
-
-
-
-const database = require('../app');
 const {getPostData} = require('../utils/utils');
+const mongoutil = require('../utils/mongoutil');
+const db = mongoutil.getDb();
 
-const showQueries = (req,res) =>{
+
+const showQueries = async (req,res) =>{
     try{
-        const collection = database.collection('ticket');
-        const result = database.collection.find({}).toArray();
-
+        const result = await db.collection('ticket').find({}).toArray();
+        console.log(result)
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.write(JSON.stringify(result));
         res.end();
@@ -28,15 +22,15 @@ const addQuery = async (req,res)=>{
     try{
         //const collection = database.collection('ticket');
         const body = JSON.parse(await getPostData(req));
-        console.log(body);
+        //console.log(typeof(body));
 
-        //const result =  database.collection.insert(body);
+        await db.collection('ticket').insertOne(body);
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.write(JSON.stringify({message:'Query is submitted'}));
         res.end();
 
-        console.log('Ticket was inserted in Document with the id ${result.insertedID}');
+        //console.log('Ticket was inserted in Document with the id ${result.insertedID}');
     }
     catch(err){
         console.log('Error saving your query');
