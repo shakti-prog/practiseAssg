@@ -1,12 +1,15 @@
 const {getPostData} = require('../utils/utils');
-const mongoutil = require('../utils/mongoutil');
-const db = mongoutil.getDb();
+const bson = require('bson');
+let mongoutil = require('../utils/mongoutil');
+
 
 
 const showQueries = async (req,res) =>{
     try{
-        const result = await db.collection('ticket').find({}).toArray();
+        var db = mongoutil.getDb();
+        let result = await db.collection('ticket').find({}).toArray();
         console.log(result)
+        
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.write(JSON.stringify(result));
         res.end();
@@ -14,58 +17,63 @@ const showQueries = async (req,res) =>{
         console.log("Queries displayed");
 
     }catch(err){
-        console.log('Error in showing queries:' + err);
+        console.log('Error in displaying queries: ' + err);
         res.end();
     }
 }
 const addQuery = async (req,res)=>{
     try{
-        //const collection = database.collection('ticket');
+        var db = mongoutil.getDb();
         const body = JSON.parse(await getPostData(req));
-        //console.log(typeof(body));
+        console.log(body);
 
-        await db.collection('ticket').insertOne(body);
+        let result = await db.collection('ticket').insertOne(body)
+        console.log(result)
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.write(JSON.stringify({message:'Query is submitted'}));
         res.end();
 
-        //console.log('Ticket was inserted in Document with the id ${result.insertedID}');
+        console.log('Ticket was inserted.');
     }
     catch(err){
-        console.log('Error saving your query');
+        console.log('Error saving your query: '+ err);
         res.end();
     }
 }
 
-const updateQuery = (req,res)=>{
+const updateQuery = async (req,res)=>{
     try{
-        const collection = database.collection('ticket');
-        const queryObj = JSON.parse(req);
+        var db = mongoutil.getDb();
+        let body = JSON.parse(await getPostData(req));
 
-        const filter = {_id:queryObj._id};
+        const bsonObjectId = new bson.ObjectId(body._id);
+        
+        const filter = {_id:bsonObjectId};
         const options = { upsert: false };
-        const updateDoc = {$set: {status:"solved"}};
+        const updateDoc = {$set: {"status":"solved","comment":body.comment}};
 
-        const result = database.collection.update(filter, updateDoc, options);
+        const result = await db.collection('ticket').updateOne(filter, updateDoc);
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.write(JSON.stringify({message:'Query resolved'}));
         res.end();
 
-        console.log('Query status was updated with the id ${result.insertedID}');
+        console.log('Query status was updated');
     }catch(err){
-        console.log('Error in updating your query');
+        console.log('Error in updating your query: '+ err);
         res.end();
     }
 }
 
-const deleteQuery = (req,res) =>{
+const deleteQuery = async (req,res) =>{
     try{
-        const collection = database.collection('ticket');
-        const queryObj = JSON.parse(req);
+        var db = mongoutil.getDb();
+        let body = JSON.parse(await getPostData(req));
 
-        const result = database.collection.remove({_id:queryObj._id});
+        const bsonObjectId = new bson.ObjectId(body._id);
+
+        const result = await db.collection('ticket').deleteOne({_id:bsonObjectId});
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.write(JSON.stringify({message:'Query is deleted'}));
