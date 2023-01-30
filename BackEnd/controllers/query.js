@@ -1,6 +1,7 @@
 const {getPostData} = require('../utils/utils');
 const bson = require('bson');
 let mongoutil = require('../utils/mongoutil');
+const auth = require("./middleware/auth");
 
 
 
@@ -8,7 +9,6 @@ const showQueries = async (req,res) =>{
     try{
         var db = mongoutil.getDb();
         let result = await db.collection('ticket').find({}).toArray();
-        console.log(result)
         
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.write(JSON.stringify(result));
@@ -25,11 +25,8 @@ const addQuery = async (req,res)=>{
     try{
         var db = mongoutil.getDb();
         const body = JSON.parse(await getPostData(req));
-        console.log(body);
 
         let result = await db.collection('ticket').insertOne(body)
-        console.log(result)
-
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.write(JSON.stringify({message:'Query is submitted'}));
         res.end();
